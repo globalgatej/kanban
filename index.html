@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+    <style>
+        body {
+            background: rgb(228, 232, 236);
+        }
+
+        .ghost {
+            opacity: 0.5;
+            background: #c8ebfb;
+        }
+
+        .items,
+        .item {
+            transition: 0.4s background;
+        }
+
+        .item.hover {
+            background: #c8ebfb;
+        }
+
+        .items.hover {
+            background: #fbc8c8;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div id="app">
+        <div class="container-fluid">
+            <div class="row my-4">
+                <div class="col">
+                    <h1>Vue.jsとVue.draggableでつくるカンバン式タスク管理システム</h1>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-auto">
+                    <button class="btn btn-primary" v-on:click="addGroup">
+                        タスクグループの追加
+                    </button>
+
+                </div>
+            </div>
+
+            <draggable class="row flex-nowrap w-100" ghost-class="ghost" style="overflow: auto;" @end="saveCurrent">
+
+                <div class="col-3 items py-4" v-for="(item,index) in tasks" :key="'task-' + index"
+                    v-on:mouseenter="addClass($event)" v-on:mouseleave="removeClass($event)">
+                    <div class="mb-3"><input type="text" class="form-control fw-bold" v-model="item.name"
+                            placeholder="グループ名を入力">
+                        <div class="text-end mt-2">
+                            <button class="btn btn-sm btn-outline-danger"
+                                v-on:click="delGroup(index)">このタスクグループを削除</button>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded">
+                        <draggable class="items" ghost-class="ghost" :list="item.task" group="tasks" @end="saveCurrent">
+                            <div class="item p-3" v-for="(item2,index2) in item.task" :key="'item-' + index2"
+                                v-on:mouseenter="addClass($event)" v-on:mouseleave="removeClass($event)">
+                                <textarea class="form-control" style="height: 100px;" v-model="item2.name"
+                                    placeholder="タスクを入力"></textarea>
+                                <div class="text-end mt-2">
+                                    <button class="btn btn-sm btn-outline-danger"
+                                        v-on:click="delTask(item.task,index2)">このタスクを削除</button>
+                                </div>
+                            </div>
+                        </draggable>
+                        <div class="p-3">
+                            <button class="btn w-100 btn-secondary" v-on:click="addTask(item)">タスクの追加</button>
+                        </div>
+                    </div>
+                </div>
+            </draggable>
+        </div>
+    </div>
+
+
+    <script src="https://unpkg.com/vue@2.6.12"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.8.4/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Vue.Draggable/2.20.0/vuedraggable.umd.min.js"></script>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data() {
+                return {
+                    tasks: []
+
+                }
+            },
+            watch: {
+                tasks: {
+                    handler() {
+                        const vm = this;
+                        vm.saveCurrent();
+                    },
+                    deep: true
+                }
+            },
+            mounted() {
+                const vm = this;
+                let savedTasks = localStorage.getItem('tasks');
+                if (savedTasks) {
+                    savedTasks = JSON.parse(savedTasks)
+                } else {
+                    savedTasks = [{
+                        name: '',
+                        task: []
+                    }]
+                }
+                vm.$set(vm, 'tasks', savedTasks);
+            },
+            methods: {
+                addClass($event) {
+                    $event.target.classList.add("hover")
+
+                },
+                removeClass($event) {
+                    $event.target.classList.remove("hover")
+                },
+                saveCurrent() {
+                    const vm = this;
+                    console.log(vm.tasks);
+                    const tasks = JSON.stringify(vm.tasks);
+                    localStorage.setItem('tasks', tasks);
+
+                },
+                addTask(item) {
+                    const vm = this;
+                    item.task.push({
+                        name: ''
+                    })
+
+                },
+                addGroup() {
+                    const vm = this;
+                    vm.tasks.push({
+                        name: '',
+                        task: []
+                    })
+
+                },
+                delTask(item, index) {
+                    const vm = this;
+                    item.splice(index, 1);
+
+                },
+                delGroup(index) {
+                    const vm = this;
+                    vm.tasks.splice(index, 1);
+
+                }
+            }
+
+        })
+    </script>
+</body>
+
+</html>
